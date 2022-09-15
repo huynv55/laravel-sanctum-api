@@ -3,6 +3,7 @@ namespace App\Services\Auth;
 
 use App\Http\Resources\AuthLogoutResource;
 use App\Http\Resources\AuthUserResource;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Support\Responsable;
@@ -22,7 +23,7 @@ class AuthUserService implements AuthServiceInterface
     {
         if(auth()->attempt($request->only('email', 'password')))
         {
-            $user = auth()->user();
+            $user = $this->getAuthenticated();
             $res = new AuthUserResource([]);
             $res->setUser($user);
             return $res;
@@ -42,12 +43,9 @@ class AuthUserService implements AuthServiceInterface
         return $res;
     }
 
-    public function checkIsLogin(Request $request): bool
+    public function checkIsLogin(): bool
     {
-        if(!empty($request->user())) {
-            return true;
-        }
-        return false;
+        return auth()->check();
     }
 
     public function hashPassword(string $password): string
@@ -62,12 +60,24 @@ class AuthUserService implements AuthServiceInterface
 
     public function logout(Request $request): Responsable
     {
-        if($this->checkIsLogin($request))
+        if($this->checkIsLogin())
         {
-            $request->user()->currentAccessToken()->delete();
+            if($request->input('force', 0)) {
+                [$id, $token] = explode('|', $request->bearerToken(), 2);
+                $this->getAuthenticated()->tokens()->find($id)->delete();
+            }
+            else {
+                // delete all access tokens that belong to user.
+                $this->getAuthenticated()->tokens()->delete();
+            }
             return new AuthLogoutResource([]);
         }
         throw new AuthenticationException();
+    }
+
+    public function getAuthenticated(): ?User
+    {
+        return auth('sanctum')->user();
     }
 }
 ?>

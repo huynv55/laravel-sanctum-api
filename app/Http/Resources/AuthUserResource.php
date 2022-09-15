@@ -48,6 +48,7 @@ class AuthUserResource extends JsonResource
     {
         if($this->user) {
             return [
+                'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email
             ];

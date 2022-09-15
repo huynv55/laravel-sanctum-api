@@ -2,13 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GetUserRequest;
+use App\Http\Resources\UserResource;
+use App\Repositories\UserRepository;
+use App\Services\Auth\AuthUserService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function user(Request $request) : JsonResponse
+    protected UserRepository $repository;
+    protected AuthUserService $auth;
+    public function __construct(UserRepository $userRepository, AuthUserService $auth)
     {
-        return $request->user();
+        $this->repository = $userRepository;
+        $this->auth = $auth;
+    }
+
+    public function user(GetUserRequest $request) : JsonResponse
+    {
+        $resource = new UserResource([]);
+        $resource->setUser($this->auth->getAuthenticated());
+        return response()->json($resource);
     }
 }

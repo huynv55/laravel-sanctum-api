@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthUserController;
+use App\Http\Controllers\UserController;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -16,15 +17,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    try {
-        return $request->user();
-    }
-    catch (\Exception $e) {
-        throw new AuthenticationException();
-    }
-    
-});
+Route::middleware('auth:sanctum')->get('/user', [UserController::class, "user"]);
 
 Route::post("/login", [AuthUserController::class, "login"]);
 Route::post("/logout", [AuthUserController::class, "logout"]);
